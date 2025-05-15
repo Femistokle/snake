@@ -36,7 +36,8 @@ canvas.addEventListener('touchstart', function(e) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
     }
-}, false);
+    e.preventDefault();
+}, { passive: false });
 
 canvas.addEventListener('touchend', function(e) {
     if (touchStartX === null || touchStartY === null) return;
@@ -57,7 +58,8 @@ canvas.addEventListener('touchend', function(e) {
     }
     touchStartX = null;
     touchStartY = null;
-}, false);
+    e.preventDefault();
+}, { passive: false });
 
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
