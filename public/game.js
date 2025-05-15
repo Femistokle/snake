@@ -74,14 +74,217 @@ function updateScores() {
 }
 
 function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#34495e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#2ecc71';
-    for (let segment of gameState.snake) {
-        ctx.fillRect(segment.x * CELL_SIZE, segment.y * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
+
+    // Проверяем, ест ли змейка зайца на следующем ходу
+    let eatingRabbit = false;
+    if (gameState.snake.length > 0) {
+        const head = gameState.snake[0];
+        // Определяем текущее направление змейки
+        let dir = null;
+        if (window.playerDirections && window.playerDirections.snake) {
+            dir = window.playerDirections.snake;
+        } else if (gameState.snakeDir) {
+            dir = gameState.snakeDir;
+        }
+        // Предсказываем следующий ход
+        if (dir && typeof CELL_SIZE !== 'undefined') {
+            let dx = 0, dy = 0;
+            if (dir === 'up') dy = -1;
+            if (dir === 'down') dy = 1;
+            if (dir === 'left') dx = -1;
+            if (dir === 'right') dx = 1;
+            const nextX = (head.x + dx + 20) % 20;
+            const nextY = (head.y + dy + 20) % 20;
+            if (nextX === gameState.rabbit.x && nextY === gameState.rabbit.y) {
+                eatingRabbit = true;
+            }
+        }
     }
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(gameState.rabbit.x * CELL_SIZE, gameState.rabbit.y * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
+
+    // Тень под змейкой
+    ctx.save();
+    for (let i = 0; i < gameState.snake.length; i++) {
+        const segment = gameState.snake[i];
+        const x = segment.x * CELL_SIZE;
+        const y = segment.y * CELL_SIZE;
+        ctx.beginPath();
+        ctx.arc(x + CELL_SIZE / 2, y + CELL_SIZE / 2 + 2, CELL_SIZE / 2.2, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(30,40,50,0.18)';
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Рисуем змейку
+    for (let i = 0; i < gameState.snake.length; i++) {
+        const segment = gameState.snake[i];
+        const x = segment.x * CELL_SIZE;
+        const y = segment.y * CELL_SIZE;
+        // Размер сегмента: голова самая большая, хвост — меньше
+        const minRadius = CELL_SIZE / 3.2;
+        const maxRadius = CELL_SIZE / 2 - 1;
+        const radius = maxRadius - (maxRadius - minRadius) * (i / (gameState.snake.length - 1 || 1));
+        // Цвет: плавный переход к более тёмному
+        let colorStart = [67, 233, 123]; // #43e97b
+        let colorEnd = [39, 174, 96];   // #27ae60
+        let t = i / (gameState.snake.length - 1 || 1);
+        let r = Math.round(colorStart[0] * (1 - t) + colorEnd[0] * t);
+        let g = Math.round(colorStart[1] * (1 - t) + colorEnd[1] * t);
+        let b = Math.round(colorStart[2] * (1 - t) + colorEnd[2] * t);
+        const fillColor = `rgb(${r},${g},${b})`;
+        if (i === 0) {
+            // Голова змейки — овальная, с выразительными деталями
+            // Определяем направление головы
+            let dir = null;
+            if (window.playerDirections && window.playerDirections.snake) {
+                dir = window.playerDirections.snake;
+            } else if (gameState.snakeDir) {
+                dir = gameState.snakeDir;
+            }
+            let angle = 0;
+            if (dir === 'up') angle = -Math.PI / 2;
+            if (dir === 'down') angle = Math.PI / 2;
+            if (dir === 'left') angle = Math.PI;
+            if (dir === 'right') angle = 0;
+            ctx.save();
+            // Центр головы
+            const cx = x + CELL_SIZE / 2;
+            const cy = y + CELL_SIZE / 2;
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+            // Овальная форма головы
+            ctx.beginPath();
+            ctx.ellipse(0, 0, radius * 1.15, radius * 0.85, 0, 0, 2 * Math.PI);
+            // Окантовка
+            ctx.lineWidth = 2.2;
+            ctx.strokeStyle = '#145a32';
+            ctx.stroke();
+            // Градиент головы
+            const grad = ctx.createRadialGradient(0, 0, 6, 0, 0, radius * 1.15);
+            grad.addColorStop(0, '#43e97b');
+            grad.addColorStop(1, '#38b86c');
+            ctx.fillStyle = grad;
+            ctx.shadowColor = '#145a32';
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            // Глаза (белки)
+            ctx.beginPath();
+            ctx.ellipse(7, -6, 4, 4.7, 0, 0, 2 * Math.PI);
+            ctx.ellipse(7, 6, 4, 4.7, 0, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            // Зрачки
+            ctx.beginPath();
+            ctx.arc(9, -6, 1.7, 0, 2 * Math.PI);
+            ctx.arc(9, 6, 1.7, 0, 2 * Math.PI);
+            ctx.fillStyle = '#222';
+            ctx.fill();
+            // Блики в глазах
+            ctx.beginPath();
+            ctx.arc(10, -7, 0.7, 0, 2 * Math.PI);
+            ctx.arc(10, 5, 0.7, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Ноздри
+            ctx.beginPath();
+            ctx.arc(-4, -2, 0.7, 0, 2 * Math.PI);
+            ctx.arc(-4, 2, 0.7, 0, 2 * Math.PI);
+            ctx.fillStyle = '#222';
+            ctx.fill();
+            // Язычок (короче и тоньше)
+            let dx = 1, dy = 0; // всегда вперёд по X после поворота
+            const tongueLen = 8;
+            const tx = radius * 1.15 + 2;
+            const ty = 0;
+            const tipX = tx + dx * tongueLen;
+            const tipY = ty + dy * tongueLen;
+            const forkAngle = Math.PI / 8;
+            const angle0 = 0;
+            const fork1X = tipX + 4 * Math.cos(angle0 - forkAngle);
+            const fork1Y = tipY + 4 * Math.sin(angle0 - forkAngle);
+            const fork2X = tipX + 4 * Math.cos(angle0 + forkAngle);
+            const fork2Y = tipY + 4 * Math.sin(angle0 + forkAngle);
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tipX, tipY);
+            ctx.lineTo(fork1X, fork1Y);
+            ctx.moveTo(tipX, tipY);
+            ctx.lineTo(fork2X, fork2Y);
+            ctx.strokeStyle = '#e17055';
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.restore();
+            ctx.restore();
+        } else {
+            // Тело змейки — зауженное и с градиентом
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x + CELL_SIZE / 2, y + CELL_SIZE / 2, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = fillColor;
+            ctx.globalAlpha = 0.95;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+    }
+
+    // Тень под зайцем
+    const rx = gameState.rabbit.x * CELL_SIZE;
+    const ry = gameState.rabbit.y * CELL_SIZE;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(rx + CELL_SIZE / 2, ry + CELL_SIZE / 2 + 4, CELL_SIZE / 2.5, 5, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(30,40,50,0.18)';
+    ctx.fill();
+    ctx.restore();
+
+    // Рисуем зайца
+    ctx.save();
+    // Ушки (белые)
+    ctx.beginPath();
+    ctx.ellipse(rx + CELL_SIZE / 2 - 6, ry + CELL_SIZE / 2 - 12, 3, 9, Math.PI / 8, 0, 2 * Math.PI);
+    ctx.ellipse(rx + CELL_SIZE / 2 + 6, ry + CELL_SIZE / 2 - 12, 3, 9, -Math.PI / 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    // Ушки (розовые внутри)
+    ctx.beginPath();
+    ctx.ellipse(rx + CELL_SIZE / 2 - 6, ry + CELL_SIZE / 2 - 12, 1.2, 5, Math.PI / 8, 0, 2 * Math.PI);
+    ctx.ellipse(rx + CELL_SIZE / 2 + 6, ry + CELL_SIZE / 2 - 12, 1.2, 5, -Math.PI / 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f8bbd0';
+    ctx.fill();
+    // Тело (круг)
+    ctx.beginPath();
+    ctx.arc(rx + CELL_SIZE / 2, ry + CELL_SIZE / 2, CELL_SIZE / 2 - 3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#bbb';
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Щёчки
+    ctx.beginPath();
+    ctx.arc(rx + CELL_SIZE / 2 - 6, ry + CELL_SIZE / 2 + 3, 2, 0, 2 * Math.PI);
+    ctx.arc(rx + CELL_SIZE / 2 + 6, ry + CELL_SIZE / 2 + 3, 2, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f8bbd0';
+    ctx.fill();
+    // Глазки
+    ctx.beginPath();
+    ctx.arc(rx + CELL_SIZE / 2 - 4, ry + CELL_SIZE / 2 - 2, 1.3, 0, 2 * Math.PI);
+    ctx.arc(rx + CELL_SIZE / 2 + 4, ry + CELL_SIZE / 2 - 2, 1.3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+    // Носик
+    ctx.beginPath();
+    ctx.arc(rx + CELL_SIZE / 2, ry + CELL_SIZE / 2 + 1, 1.2, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e17055';
+    ctx.fill();
+    ctx.restore();
 }
 
 const GAME_KEYS = {
@@ -111,6 +314,10 @@ socket.on('roleError', ({ message }) => {
 });
 
 document.addEventListener('keydown', (event) => {
+    // Блокируем скролл при стрелках
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        event.preventDefault();
+    }
     if (!gameState.isGameStarted || gameState.isGameOver || !canControl) return;
     let direction = null;
     if (GAME_KEYS[event.key]) {
