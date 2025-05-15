@@ -21,16 +21,12 @@ const SURVIVAL_INTERVAL = 10;
 const GAME_TICK = 100; // миллисекунд (змея быстрее)
 const RABBIT_MOVE_INTERVAL = 200; // миллисекунд (заяц медленнее)
 
-// Направления
+// Направления (удаляем WASD)
 const DIRECTIONS = {
     up: { x: 0, y: -1 },
     down: { x: 0, y: 1 },
     left: { x: -1, y: 0 },
-    right: { x: 1, y: 0 },
-    w: { x: 0, y: -1 },
-    s: { x: 0, y: 1 },
-    a: { x: -1, y: 0 },
-    d: { x: 1, y: 0 }
+    right: { x: 1, y: 0 }
 };
 
 // Для хранения направлений игроков
@@ -67,10 +63,6 @@ function getOppositeDirection(dir) {
         case 'down': return 'up';
         case 'left': return 'right';
         case 'right': return 'left';
-        case 'w': return 's';
-        case 's': return 'w';
-        case 'a': return 'd';
-        case 'd': return 'a';
         default: return dir;
     }
 }

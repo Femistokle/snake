@@ -50,21 +50,11 @@ function draw() {
     ctx.fillRect(gameState.rabbit.x * CELL_SIZE, gameState.rabbit.y * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
 }
 
-const SNAKE_KEYS = {
+const GAME_KEYS = {
     ArrowUp: 'up',
     ArrowDown: 'down',
     ArrowLeft: 'left',
     ArrowRight: 'right'
-};
-const RABBIT_KEYS = {
-    w: 'up',
-    s: 'down',
-    a: 'left',
-    d: 'right',
-    'ц': 'up',    // русская раскладка
-    'ы': 'down',
-    'ф': 'left',
-    'в': 'right'
 };
 
 chooseSnakeBtn.onclick = () => chooseRole('snake');
@@ -89,10 +79,8 @@ socket.on('roleError', ({ message }) => {
 document.addEventListener('keydown', (event) => {
     if (!gameState.isGameStarted || gameState.isGameOver || !canControl) return;
     let direction = null;
-    if (myRole === 'snake' && SNAKE_KEYS[event.key]) {
-        direction = SNAKE_KEYS[event.key];
-    } else if (myRole === 'rabbit' && RABBIT_KEYS[event.key]) {
-        direction = RABBIT_KEYS[event.key];
+    if (GAME_KEYS[event.key]) {
+        direction = GAME_KEYS[event.key];
     }
     if (direction) {
         socket.emit('playerMove', { gameCode, role: myRole, direction });
