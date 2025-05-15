@@ -27,6 +27,38 @@ let gameState = {
 let myRole = null;
 let canControl = false;
 
+// --- Swipe gesture support for mobile ---
+let touchStartX = null;
+let touchStartY = null;
+
+canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }
+}, false);
+
+canvas.addEventListener('touchend', function(e) {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+    let direction = null;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30) direction = 'right';
+        else if (dx < -30) direction = 'left';
+    } else {
+        if (dy > 30) direction = 'down';
+        else if (dy < -30) direction = 'up';
+    }
+    if (direction && gameState.isGameStarted && !gameState.isGameOver && canControl) {
+        socket.emit('playerMove', { gameCode, role: myRole, direction });
+    }
+    touchStartX = null;
+    touchStartY = null;
+}, false);
+
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
