@@ -156,6 +156,12 @@ socket.on('gameState', (state) => {
     Object.assign(gameState, state);
     updateScores();
     updateRoleButtons(state);
+    const gameField = document.getElementById('gameFieldContainer');
+    if (gameState.isGameStarted) {
+        gameField.style.display = '';
+    } else {
+        gameField.style.display = 'none';
+    }
     if (!gameState.isGameStarted) {
         waitingMessageElement.style.display = 'block';
         roleSelectElement.style.display = 'block';
@@ -166,17 +172,23 @@ socket.on('gameState', (state) => {
     draw();
 });
 
+// Скрываем инфоблок по умолчанию
+const gameInfoBlock = document.getElementById('gameInfoBlock');
+gameInfoBlock.style.display = 'none';
+
 socket.on('gameCreated', (code) => {
     menuElement.style.display = 'none';
     gameContainerElement.style.display = 'block';
     gameCodeElement.textContent = `Код игры: ${code}`;
     gameCode = code;
+    gameInfoBlock.style.display = '';
 });
 
 socket.on('gameJoined', (data) => {
     menuElement.style.display = 'none';
     gameContainerElement.style.display = 'block';
     if (data && data.gameCode) gameCode = data.gameCode;
+    gameInfoBlock.style.display = '';
 });
 
 socket.on('joinError', (message) => {
